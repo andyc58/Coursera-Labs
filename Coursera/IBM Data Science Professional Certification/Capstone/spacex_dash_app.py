@@ -40,8 +40,8 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                                 html.P("Payload range (Kg):"),
                                 # TASK 3: Add a slider to select payload range
                                 dcc.RangeSlider(id='payload-slider',
-                                                min=0, max=10000, step=1000,
-                                                marks={0: '0', 100: '100'},
+                                                min=0, max=10000, step=2500,
+                                                marks={i: str(i) for i in range(0,10000+1, 2500)},
                                                 value=[min_payload, max_payload]),
                                 # TASK 4: Add a scatter chart to show the correlation between payload and launch success
                                 html.Div(dcc.Graph(id='success-payload-scatter-chart')),
@@ -75,19 +75,21 @@ def get_pie_chart(entered_site):
               [Input(component_id='site-dropdown', component_property='value'),
                Input(component_id='payload-slider',component_property='value')])
 def get_scatterplot(entered_site, selected_range):
+    
     filtered_df = spacex_df.loc[spacex_df['Launch Site'] == entered_site]
     
     if entered_site == 'ALL':
-        selected_range_df = spacex_df.loc[spacex_df['Payload Mass (kg)'].between(*selected_range)]
-        fig = px.scatter(selected_range_df, x='Payload Mass (kg)', y='class', color="Booster Version Category",
+        mask = spacex_df['Payload Mass (kg)'].between(*selected_range)
+        fig = px.scatter(spacex_df[mask], x='Payload Mass (kg)', y='class', color="Booster Version Category",
                      title='Correlation between Payload and Success for all sites')
-        return fig
+      
     else:
-        selected_range_df = filtered_df.loc[filtered_df['Payload Mass (kg)'].between(*selected_range)]
-
-        fig = px.scatter(selected_range_df, x='Payload Mass (kg)', y='class', color="Booster Version Category",
+        mask = filtered_df['Payload Mass (kg)'].between(*selected_range)
+        fig = px.scatter(filtered_df[mask], x='Payload Mass (kg)', y='class', color="Booster Version Category",
                      title=f'Correlation between Payload and Success for site {entered_site}')
-        return fig
+        
+    fig.update_traces(marker_size=10)
+    return fig
 
 
 # Run the app
